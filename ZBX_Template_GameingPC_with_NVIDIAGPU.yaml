@@ -1,0 +1,1292 @@
+zabbix_export:
+  version: '6.2'
+  date: '2022-10-23T04:31:50Z'
+  template_groups:
+    -
+      uuid: 531d9d0778a949baba02c4e0dd27c63f
+      name: 'Akiken Custom'
+  templates:
+    -
+      uuid: 523675d3200b4cbd984fe016ae5fa950
+      template: 'Gameing  PC  with NVIDIA GPU'
+      name: 'Gameing  PC  with NVIDIA GPU'
+      description: 'Gameing Wndows PC  for NVIDIA GPU'
+      groups:
+        -
+          name: 'Akiken Custom'
+      items:
+        -
+          uuid: 10c42c5c021e41ed9e3ab62c19227a2d
+          name: 'GPU Fan Speed'
+          key: gpu.fanspeed
+          delay: '30'
+          value_type: FLOAT
+          units: '%'
+          tags:
+            -
+              tag: Application
+              value: Nvidia
+        -
+          uuid: 3f38f5d94bed4e07a4e69f16d6734e07
+          name: 'GPU Free Memory'
+          key: gpu.free
+          delay: '30'
+          value_type: FLOAT
+          units: B
+          preprocessing:
+            -
+              type: MULTIPLIER
+              parameters:
+                - '1048576'
+          tags:
+            -
+              tag: Application
+              value: Nvidia
+        -
+          uuid: bab83fee6c89438d8b9df26cb7505d80
+          name: 'GPU Total Memory'
+          key: gpu.memtotal
+          delay: '30'
+          value_type: FLOAT
+          units: B
+          preprocessing:
+            -
+              type: MULTIPLIER
+              parameters:
+                - '1048576'
+          tags:
+            -
+              tag: Application
+              value: Nvidia
+        -
+          uuid: 04e0d960b58b44a799c6d92e38059938
+          name: 'GPU Power'
+          key: gpu.power
+          delay: '30'
+          value_type: FLOAT
+          units: W
+          tags:
+            -
+              tag: Application
+              value: Nvidia
+        -
+          uuid: 4a23a6b0e2234d588c34f341e68bd951
+          name: 'GPU Temperature'
+          key: gpu.temp
+          delay: '30'
+          value_type: FLOAT
+          units: C
+          tags:
+            -
+              tag: Application
+              value: Nvidia
+          triggers:
+            -
+              uuid: d3740723f8f044ad99daa48662d99df9
+              expression: 'last(/Gameing  PC  with NVIDIA GPU/gpu.temp,#2)>95'
+              name: 'GPU Temperature over 95c {HOSTNAME}'
+              priority: AVERAGE
+        -
+          uuid: 663cb3e17af445a99d357d68043dd4ae
+          name: 'GPU Used Memory'
+          key: gpu.used
+          delay: '30'
+          value_type: FLOAT
+          units: B
+          preprocessing:
+            -
+              type: MULTIPLIER
+              parameters:
+                - '1048576'
+          tags:
+            -
+              tag: Application
+              value: Nvidia
+        -
+          uuid: 371c6c426b4b43dfb986674c197b531f
+          name: 'GPU Utilisation'
+          key: gpu.utilisation
+          delay: '30'
+          value_type: FLOAT
+          units: '%'
+          tags:
+            -
+              tag: Application
+              value: Nvidia
+        -
+          uuid: 04d9eaac7b6e49608220b14a9fb249e5
+          name: 'Free system page table entries'
+          key: 'perf_counter_en["\Memory\Free System Page Table Entries"]'
+          description: |
+            This indicates the number of page table entries not currently in use by the system. If the number is less
+            than 5,000, there may well be a memory leak or you running out of memory.
+          tags:
+            -
+              tag: component
+              value: memory
+          triggers:
+            -
+              uuid: 9172b00e9f80465fbefda1705fac410a
+              expression: 'max(/Gameing  PC  with NVIDIA GPU/perf_counter_en["\Memory\Free System Page Table Entries"],5m)<{$MEM.PAGE_TABLE_CRIT.MIN}'
+              name: 'Number of free system page table entries is too low'
+              event_name: 'Number of free system page table entries is too low (less {$MEM.PAGE_TABLE_CRIT.MIN} for 5m)'
+              priority: WARNING
+              description: 'The Memory Free System Page Table Entries is less than {$MEM.PAGE_TABLE_CRIT.MIN} for 5 minutes. If the number is less than 5,000, there may well be a memory leak.'
+              dependencies:
+                -
+                  name: 'High memory utilization'
+                  expression: 'min(/Gameing  PC  with NVIDIA GPU/vm.memory.util,5m)>{$MEMORY.UTIL.MAX}'
+              tags:
+                -
+                  tag: scope
+                  value: capacity
+        -
+          uuid: a07cf69f35154ae08ea4b153c479a07f
+          name: 'Used swap space in %'
+          key: 'perf_counter_en["\Paging file(_Total)\% Usage"]'
+          value_type: FLOAT
+          units: '%'
+          description: 'The used space of swap volume/file in percent.'
+          tags:
+            -
+              tag: component
+              value: memory
+            -
+              tag: component
+              value: storage
+        -
+          uuid: 6d33bea995a04c6b8b290a84f03d72ec
+          name: 'CPU interrupt time'
+          key: 'perf_counter_en["\Processor Information(_total)\% Interrupt Time"]'
+          value_type: FLOAT
+          units: '%'
+          description: |
+            The Processor Information\% Interrupt Time is the time the processor spends receiving and servicing
+            hardware interrupts during sample intervals. This value is an indirect indicator of the activity of
+            devices that generate interrupts, such as the system clock, the mouse, disk drivers, data communication
+            lines, network interface cards and other peripheral devices. This is an easy way to identify a potential
+            hardware failure. This should never be higher than 20%.
+          tags:
+            -
+              tag: component
+              value: cpu
+          triggers:
+            -
+              uuid: 577b069f4ee54d07a15d251e4bbc7954
+              expression: 'min(/Gameing  PC  with NVIDIA GPU/perf_counter_en["\Processor Information(_total)\% Interrupt Time"],5m)>{$CPU.INTERRUPT.CRIT.MAX}'
+              name: 'CPU interrupt time is too high'
+              event_name: 'CPU interrupt time is too high (over {$CPU.INTERRUPT.CRIT.MAX}% for 5m)'
+              priority: WARNING
+              description: |
+                "The CPU Interrupt Time in the last 5 minutes exceeds {$CPU.INTERRUPT.CRIT.MAX}%."
+                The Processor Information\% Interrupt Time is the time the processor spends receiving and servicing
+                hardware interrupts during sample intervals. This value is an indirect indicator of the activity of
+                devices that generate interrupts, such as the system clock, the mouse, disk drivers, data communication
+                lines, network interface cards and other peripheral devices. This is an easy way to identify a potential
+                hardware failure. This should never be higher than 20%.
+              dependencies:
+                -
+                  name: 'High CPU utilization'
+                  expression: 'min(/Gameing  PC  with NVIDIA GPU/system.cpu.util,5m)>{$CPU.UTIL.CRIT}'
+              tags:
+                -
+                  tag: scope
+                  value: performance
+        -
+          uuid: 4e5687a1dde84de4b763da5798c4398e
+          name: 'CPU privileged time'
+          key: 'perf_counter_en["\Processor Information(_total)\% Privileged Time"]'
+          value_type: FLOAT
+          units: '%'
+          description: |
+            The Processor Information\% Privileged Time counter shows the percent of time that the processor is spent
+            executing in Kernel (or Privileged) mode. Privileged mode includes services interrupts inside Interrupt
+            Service Routines (ISRs), executing Deferred Procedure Calls (DPCs), Device Driver calls and other kernel-mode
+            functions of the Windows® Operating System.
+          tags:
+            -
+              tag: component
+              value: cpu
+          triggers:
+            -
+              uuid: f370eb2ce8e6438a8b710061dd380e10
+              expression: 'min(/Gameing  PC  with NVIDIA GPU/perf_counter_en["\Processor Information(_total)\% Privileged Time"],5m)>{$CPU.PRIV.CRIT.MAX}'
+              name: 'CPU privileged time is too high'
+              event_name: 'CPU privileged time is too high (over {$CPU.PRIV.CRIT.MAX}% for 5m)'
+              priority: WARNING
+              description: 'The CPU privileged time in the last 5 minutes exceeds {$CPU.PRIV.CRIT.MAX}%.'
+              dependencies:
+                -
+                  name: 'CPU interrupt time is too high'
+                  expression: 'min(/Gameing  PC  with NVIDIA GPU/perf_counter_en["\Processor Information(_total)\% Interrupt Time"],5m)>{$CPU.INTERRUPT.CRIT.MAX}'
+                -
+                  name: 'High CPU utilization'
+                  expression: 'min(/Gameing  PC  with NVIDIA GPU/system.cpu.util,5m)>{$CPU.UTIL.CRIT}'
+              tags:
+                -
+                  tag: scope
+                  value: performance
+        -
+          uuid: 6329e53cae104a848a773da2fe4d4b35
+          name: 'CPU user time'
+          key: 'perf_counter_en["\Processor Information(_total)\% User Time"]'
+          value_type: FLOAT
+          units: '%'
+          description: |
+            The Processor Information\% User Time counter shows the percent of time that the processor(s) is spent executing
+            in User mode.
+          tags:
+            -
+              tag: component
+              value: cpu
+        -
+          uuid: 4339937e5645480191bfedc730ea5d0c
+          name: 'CPU queue length'
+          key: 'perf_counter_en["\System\Processor Queue Length"]'
+          value_type: FLOAT
+          description: |
+            The Processor Queue Length shows the number of threads that are observed as delayed in the processor Ready Queue
+            and are waiting to be executed.
+          tags:
+            -
+              tag: component
+              value: cpu
+        -
+          uuid: b06d98aebcbc4873adc41f6d23ea289b
+          name: 'CPU utilization'
+          key: system.cpu.util
+          value_type: FLOAT
+          units: '%'
+          description: 'CPU utilization in %.'
+          tags:
+            -
+              tag: component
+              value: cpu
+          triggers:
+            -
+              uuid: e5f41607fd8045cc84ae218b7f7c56ac
+              expression: 'min(/Gameing  PC  with NVIDIA GPU/system.cpu.util,5m)>{$CPU.UTIL.CRIT}'
+              name: 'High CPU utilization'
+              event_name: 'High CPU utilization (over {$CPU.UTIL.CRIT}% for 5m)'
+              opdata: 'Current utilization: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'CPU utilization is too high. The system might be slow to respond.'
+              tags:
+                -
+                  tag: scope
+                  value: performance
+        -
+          uuid: e516440fb62b4f6aa8bdfbb46a6d3a94
+          name: 'Operating system architecture'
+          key: system.sw.arch
+          delay: 1h
+          history: 2w
+          trends: '0'
+          value_type: CHAR
+          description: 'Operating system architecture of the host.'
+          preprocessing:
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            -
+              tag: component
+              value: os
+        -
+          uuid: 651ff1b5003d44ed859fe128fe7597dd
+          name: 'Free swap space'
+          type: CALCULATED
+          key: system.swap.free
+          units: B
+          params: 'last(//system.swap.size[,total]) - last(//system.swap.size[,total]) / 100 * last(//perf_counter_en["\Paging file(_Total)\% Usage"])'
+          description: 'The free space of swap volume/file in bytes.'
+          tags:
+            -
+              tag: component
+              value: memory
+            -
+              tag: component
+              value: storage
+        -
+          uuid: 19c081bcf02a4bf3826bdbb8a718a837
+          name: 'Free swap space in %'
+          type: DEPENDENT
+          key: system.swap.pfree
+          delay: '0'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The free space of swap volume/file in percent.'
+          preprocessing:
+            -
+              type: JAVASCRIPT
+              parameters:
+                - 'return (100 - value)'
+          master_item:
+            key: 'perf_counter_en["\Paging file(_Total)\% Usage"]'
+          tags:
+            -
+              tag: component
+              value: memory
+            -
+              tag: component
+              value: storage
+        -
+          uuid: 2d7c268cac954121a5da5bcba2e5d98f
+          name: 'Total swap space'
+          key: 'system.swap.size[,total]'
+          units: B
+          description: 'The total space of swap volume/file in bytes.'
+          tags:
+            -
+              tag: component
+              value: memory
+            -
+              tag: component
+              value: storage
+        -
+          uuid: 35b3e6fd15554ec3b32aedd28161f1ad
+          name: 'System description'
+          key: system.uname
+          delay: 15m
+          history: 2w
+          trends: '0'
+          status: DISABLED
+          value_type: CHAR
+          description: 'System description of the host.'
+          preprocessing:
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            -
+              tag: component
+              value: system
+        -
+          uuid: dd02a2535d3c4fc395a752b80be8703f
+          name: 'Total memory'
+          key: 'vm.memory.size[total]'
+          units: B
+          description: 'Total memory in Bytes.'
+          tags:
+            -
+              tag: component
+              value: memory
+        -
+          uuid: 2ac8a15a363d42d5a4f05ace2edc6520
+          name: 'Used memory'
+          key: 'vm.memory.size[used]'
+          units: B
+          description: 'Used memory in Bytes.'
+          tags:
+            -
+              tag: component
+              value: memory
+        -
+          uuid: 6636dcae82614cca8d6ee7342ac3a2ea
+          name: 'Memory utilization'
+          type: CALCULATED
+          key: vm.memory.util
+          value_type: FLOAT
+          units: '%'
+          params: 'last(//vm.memory.size[used]) / last(//vm.memory.size[total]) * 100'
+          description: 'Memory utilization in %.'
+          tags:
+            -
+              tag: component
+              value: memory
+          triggers:
+            -
+              uuid: 28e94294aaf549448901a30aac01346c
+              expression: 'min(/Gameing  PC  with NVIDIA GPU/vm.memory.util,5m)>{$MEMORY.UTIL.MAX}'
+              name: 'High memory utilization'
+              event_name: 'High memory utilization (>{$MEMORY.UTIL.MAX}% for 5m)'
+              priority: AVERAGE
+              description: 'The system is running out of free memory.'
+              tags:
+                -
+                  tag: scope
+                  value: capacity
+                -
+                  tag: scope
+                  value: performance
+        -
+          uuid: 372d225cb4f64a8093a8eef9e154dbb3
+          name: 'Network interfaces WMI get'
+          key: 'wmi.getall[root\cimv2,"select Name,Description,NetConnectionID,Speed,AdapterTypeId,NetConnectionStatus,GUID from win32_networkadapter where PhysicalAdapter=True and NetConnectionStatus>0"]'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          description: 'Raw data of win32_networkadapter.'
+          preprocessing:
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          tags:
+            -
+              tag: component
+              value: raw
+      discovery_rules:
+        -
+          uuid: cbd057117ef1453dbc1076210b0a6c66
+          name: 'Network interfaces discovery'
+          type: DEPENDENT
+          key: net.if.discovery
+          delay: '0'
+          filter:
+            conditions:
+              -
+                macro: '{#IFALIAS}'
+                value: '{$NET.IF.IFALIAS.MATCHES}'
+                formulaid: A
+              -
+                macro: '{#IFALIAS}'
+                value: '{$NET.IF.IFALIAS.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: B
+              -
+                macro: '{#IFDESCR}'
+                value: '{$NET.IF.IFDESCR.MATCHES}'
+                formulaid: C
+              -
+                macro: '{#IFDESCR}'
+                value: '{$NET.IF.IFDESCR.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: D
+              -
+                macro: '{#IFNAME}'
+                value: '{$NET.IF.IFNAME.MATCHES}'
+                formulaid: E
+              -
+                macro: '{#IFNAME}'
+                value: '{$NET.IF.IFNAME.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: F
+          lifetime: 1h
+          item_prototypes:
+            -
+              uuid: 5b63482b3ab24fab8b11a4f802c52407
+              name: 'Interface {#IFNAME}({#IFALIAS}): Bits received'
+              key: 'net.if.in["{#IFGUID}"]'
+              units: bps
+              preprocessing:
+                -
+                  type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                -
+                  tag: component
+                  value: network
+                -
+                  tag: description
+                  value: '{#IFALIAS}'
+                -
+                  tag: interface
+                  value: '{#IFNAME}'
+            -
+              uuid: 3043ceebb8094303a406f32b7e025ddf
+              name: 'Interface {#IFNAME}({#IFALIAS}): Bits sent'
+              key: 'net.if.out["{#IFGUID}"]'
+              units: bps
+              preprocessing:
+                -
+                  type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                -
+                  tag: component
+                  value: network
+                -
+                  tag: description
+                  value: '{#IFALIAS}'
+                -
+                  tag: interface
+                  value: '{#IFNAME}'
+            -
+              uuid: 3b3962e3cbe145e7b474220e7f13c016
+              name: 'Interface {#IFNAME}({#IFALIAS}): Speed'
+              type: DEPENDENT
+              key: 'net.if.speed["{#IFGUID}"]'
+              delay: '0'
+              units: bps
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$[?(@.GUID == "{#IFGUID}")].Speed.first()'
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '0'
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - 'return (value==''9223372036854775807'' ? 0 : value)'
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              master_item:
+                key: 'wmi.getall[root\cimv2,"select Name,Description,NetConnectionID,Speed,AdapterTypeId,NetConnectionStatus,GUID from win32_networkadapter where PhysicalAdapter=True and NetConnectionStatus>0"]'
+              tags:
+                -
+                  tag: component
+                  value: network
+                -
+                  tag: description
+                  value: '{#IFALIAS}'
+                -
+                  tag: interface
+                  value: '{#IFNAME}'
+            -
+              uuid: 2fb9c66ff54e419b9d7a741571b6c1d1
+              name: 'Interface {#IFNAME}({#IFALIAS}): Operational status'
+              type: DEPENDENT
+              key: 'net.if.status["{#IFGUID}"]'
+              delay: '0'
+              valuemap:
+                name: 'Win32_NetworkAdapter::NetConnectionStatus'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$[?(@.GUID == "{#IFGUID}")].Speed.first()'
+                  error_handler: CUSTOM_VALUE
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - 'return (value==''9223372036854775807'' ? 0 : value)'
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              master_item:
+                key: 'wmi.getall[root\cimv2,"select Name,Description,NetConnectionID,Speed,AdapterTypeId,NetConnectionStatus,GUID from win32_networkadapter where PhysicalAdapter=True and NetConnectionStatus>0"]'
+              tags:
+                -
+                  tag: component
+                  value: network
+                -
+                  tag: description
+                  value: '{#IFALIAS}'
+                -
+                  tag: interface
+                  value: '{#IFNAME}'
+            -
+              uuid: d26edb614dd44bb0b5d6076d00841c24
+              name: 'Interface {#IFNAME}({#IFALIAS}): Interface type'
+              type: DEPENDENT
+              key: 'net.if.type["{#IFGUID}"]'
+              delay: '0'
+              valuemap:
+                name: 'Win32_NetworkAdapter::AdapterTypeId'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$[?(@.GUID == "{#IFGUID}")].AdapterTypeId.first()'
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1d
+              master_item:
+                key: 'wmi.getall[root\cimv2,"select Name,Description,NetConnectionID,Speed,AdapterTypeId,NetConnectionStatus,GUID from win32_networkadapter where PhysicalAdapter=True and NetConnectionStatus>0"]'
+              tags:
+                -
+                  tag: component
+                  value: network
+                -
+                  tag: description
+                  value: '{#IFALIAS}'
+                -
+                  tag: interface
+                  value: '{#IFNAME}'
+          graph_prototypes:
+            -
+              uuid: f44c1ffc1f414f6dbdc4b0a2f877e055
+              name: 'Interface {#IFNAME}({#IFALIAS}): Network traffic'
+              graph_items:
+                -
+                  color: 199C0D
+                  calc_fnc: ALL
+                  item:
+                    host: 'Gameing  PC  with NVIDIA GPU'
+                    key: 'net.if.in["{#IFGUID}"]'
+                -
+                  sortorder: '1'
+                  color: F63100
+                  calc_fnc: ALL
+                  item:
+                    host: 'Gameing  PC  with NVIDIA GPU'
+                    key: 'net.if.out["{#IFGUID}"]'
+          master_item:
+            key: 'wmi.getall[root\cimv2,"select Name,Description,NetConnectionID,Speed,AdapterTypeId,NetConnectionStatus,GUID from win32_networkadapter where PhysicalAdapter=True and NetConnectionStatus>0"]'
+          preprocessing:
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  output = JSON.parse(value).map(function(net){
+                      return {
+                          "{#IFNAME}": net.Name,
+                          "{#IFDESCR}": net.Description,
+                          "{#IFALIAS}": net.NetConnectionID,
+                          "{#IFGUID}": net.GUID
+                      }})
+                  return JSON.stringify({"data": output})
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1m
+        -
+          uuid: 81cfbbbcf0ee4bd4a8a28d4db1240e30
+          name: 'Physical disks discovery'
+          key: 'perf_instance_en.discovery[PhysicalDisk]'
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#DEVNAME}'
+                value: '{$VFS.DEV.DEVNAME.MATCHES}'
+                formulaid: A
+              -
+                macro: '{#DEVNAME}'
+                value: '{$VFS.DEV.DEVNAME.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: B
+          lifetime: 1h
+          item_prototypes:
+            -
+              uuid: 7ef48992e82847999b53c22e75d90950
+              name: '{#DEVNAME}: Disk read request avg waiting time'
+              key: 'perf_counter_en["\PhysicalDisk({#DEVNAME})\Avg. Disk sec/Read",60]'
+              value_type: FLOAT
+              units: s
+              description: 'The average time for read requests issued to the device to be served. This includes the time spent by the requests in queue and the time spent servicing them.'
+              tags:
+                -
+                  tag: component
+                  value: storage
+                -
+                  tag: disk
+                  value: '{#DEVNAME}'
+              trigger_prototypes:
+                -
+                  uuid: 798150c8d1e74f7aa900fa8b3a12a0f1
+                  expression: 'min(/Gameing  PC  with NVIDIA GPU/perf_counter_en["\PhysicalDisk({#DEVNAME})\Avg. Disk sec/Read",60],15m)>{$VFS.DEV.READ.AWAIT.WARN:"{#DEVNAME}"}'
+                  name: '{#DEVNAME}: Disk read request responses are too high'
+                  event_name: '{#DEVNAME}: Disk read request responses are too high (read > {$VFS.DEV.READ.AWAIT.WARN:"{#DEVNAME}"}s for 15m'
+                  priority: WARNING
+                  description: 'This trigger might indicate disk {#DEVNAME} saturation.'
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: scope
+                      value: performance
+            -
+              uuid: f1dc1d6481a047ab9248cf376b3eb57c
+              name: '{#DEVNAME}: Disk write request avg waiting time'
+              key: 'perf_counter_en["\PhysicalDisk({#DEVNAME})\Avg. Disk sec/Write",60]'
+              value_type: FLOAT
+              units: s
+              description: 'The average time for write requests issued to the device to be served. This includes the time spent by the requests in queue and the time spent servicing them.'
+              tags:
+                -
+                  tag: component
+                  value: storage
+                -
+                  tag: disk
+                  value: '{#DEVNAME}'
+              trigger_prototypes:
+                -
+                  uuid: 9ce843abe89d42f689e1e339c9603e56
+                  expression: 'min(/Gameing  PC  with NVIDIA GPU/perf_counter_en["\PhysicalDisk({#DEVNAME})\Avg. Disk sec/Write",60],15m)>{$VFS.DEV.READ.AWAIT.WARN:"{#DEVNAME}"}'
+                  name: '{#DEVNAME}: Disk write request responses are too high'
+                  event_name: '{#DEVNAME}: Disk write request responses are too high (write > {$VFS.DEV.WRITE.AWAIT.WARN:"{#DEVNAME}"}s for 15m)'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: scope
+                      value: performance
+            -
+              uuid: 4a07e2e2617d4f5aa2b8359e5aff764b
+              name: '{#DEVNAME}: Disk read rate'
+              key: 'perf_counter_en["\PhysicalDisk({#DEVNAME})\Disk Reads/sec",60]'
+              value_type: FLOAT
+              units: '!r/s'
+              tags:
+                -
+                  tag: component
+                  value: storage
+                -
+                  tag: disk
+                  value: '{#DEVNAME}'
+            -
+              uuid: 657c61bf88f640518293333cae0ef9fe
+              name: '{#DEVNAME}: Disk write rate'
+              key: 'perf_counter_en["\PhysicalDisk({#DEVNAME})\Disk Writes/sec",60]'
+              value_type: FLOAT
+              units: '!w/s'
+              description: 'Rate of write operations on the disk.'
+              tags:
+                -
+                  tag: component
+                  value: storage
+                -
+                  tag: disk
+                  value: '{#DEVNAME}'
+          graph_prototypes:
+            -
+              uuid: 9d110c7a592e48099f99420987294382
+              name: '{#DEVNAME}: Disk average waiting time'
+              graph_items:
+                -
+                  color: 199C0D
+                  calc_fnc: ALL
+                  item:
+                    host: 'Gameing  PC  with NVIDIA GPU'
+                    key: 'perf_counter_en["\PhysicalDisk({#DEVNAME})\Avg. Disk sec/Read",60]'
+                -
+                  sortorder: '1'
+                  color: 00FFFF
+                  calc_fnc: ALL
+                  item:
+                    host: 'Gameing  PC  with NVIDIA GPU'
+                    key: 'perf_counter_en["\PhysicalDisk({#DEVNAME})\Avg. Disk sec/Write",60]'
+            -
+              uuid: 78a397ec50d74143b849ebb5e9e42971
+              name: '{#DEVNAME}: Disk read/write rates'
+              graph_items:
+                -
+                  color: 80FF00
+                  item:
+                    host: 'Gameing  PC  with NVIDIA GPU'
+                    key: 'perf_counter_en["\PhysicalDisk({#DEVNAME})\Disk Reads/sec",60]'
+                -
+                  sortorder: '1'
+                  drawtype: GRADIENT_LINE
+                  color: 00FFFF
+                  item:
+                    host: 'Gameing  PC  with NVIDIA GPU'
+                    key: 'perf_counter_en["\PhysicalDisk({#DEVNAME})\Disk Writes/sec",60]'
+          preprocessing:
+            -
+              type: STR_REPLACE
+              parameters:
+                - '{#INSTANCE}'
+                - '{#DEVNAME}'
+      tags:
+        -
+          tag: class
+          value: os
+        -
+          tag: target
+          value: windows
+      macros:
+        -
+          macro: '{$AGENT.TIMEOUT}'
+          value: 3m
+          description: 'Timeout after which agent is considered unavailable. Works only for agents reachable from Zabbix server/proxy (passive mode).'
+        -
+          macro: '{$CPU.INTERRUPT.CRIT.MAX}'
+          value: '50'
+          description: 'The critical threshold of the % Interrupt Time counter.'
+        -
+          macro: '{$CPU.PRIV.CRIT.MAX}'
+          value: '30'
+          description: 'The threshold of the % Privileged Time counter.'
+        -
+          macro: '{$CPU.QUEUE.CRIT.MAX}'
+          value: '3'
+          description: 'The threshold of the Processor Queue Length counter.'
+        -
+          macro: '{$CPU.UTIL.CRIT}'
+          value: '90'
+          description: 'The critical threshold of the CPU utilization in %.'
+        -
+          macro: '{$IF.ERRORS.WARN}'
+          value: '90'
+        -
+          macro: '{$IF.UTIL.MAX}'
+          value: '90'
+        -
+          macro: '{$IFCONTROL}'
+          value: '1'
+        -
+          macro: '{$MEM.PAGE_SEC.CRIT.MAX}'
+          value: '1000'
+          description: 'The warning threshold of the Memory Pages/sec counter.'
+        -
+          macro: '{$MEM.PAGE_TABLE_CRIT.MIN}'
+          value: '5000'
+          description: 'The warning threshold of the Free System Page Table Entries counter.'
+        -
+          macro: '{$MEMORY.UTIL.MAX}'
+          value: '90'
+          description: 'The warning threshold of the Memory util item.'
+        -
+          macro: '{$NET.IF.IFALIAS.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in Network interface discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$NET.IF.IFALIAS.NOT_MATCHES}'
+          value: CHANGE_THIS
+          description: 'This macro is used in Network interface discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$NET.IF.IFDESCR.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in Network interface discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$NET.IF.IFDESCR.NOT_MATCHES}'
+          value: CHANGE_THIS
+          description: 'This macro is used in Network interface discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$NET.IF.IFNAME.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in Network interface discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$NET.IF.IFNAME.NOT_MATCHES}'
+          value: Miniport|Virtual|Teredo|Kernel|Loopback|Bluetooth|HTTPS|6to4|QoS|Layer
+          description: 'This macro is used in Network interface discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$SERVICE.NAME.MATCHES}'
+          value: '^.*$'
+          description: 'This macro is used in Service discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$SERVICE.NAME.NOT_MATCHES}'
+          value: '^(?:RemoteRegistry|MMCSS|gupdate|SysmonLog|clr_optimization_v.+|sppsvc|gpsvc|Pml Driver HPZ12|Net Driver HPZ12|MapsBroker|IntelAudioService|Intel\(R\) TPM Provisioning Service|dbupdate|DoSvc|CDPUserSvc_.+|WpnUserService_.+|OneSyncSvc_.+|WbioSrvc|BITS|tiledatamodelsvc|GISvc|ShellHWDetection|TrustedInstaller|TabletInputService|CDPSvc|wuauserv)$'
+          description: 'This macro is used in Service discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$SERVICE.STARTUPNAME.MATCHES}'
+          value: '^(?:automatic|automatic delayed)$'
+          description: 'This macro is used in Service discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$SERVICE.STARTUPNAME.NOT_MATCHES}'
+          value: '^(?:manual|disabled)$'
+          description: 'This macro is used in Service discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$SWAP.PFREE.MIN.WARN}'
+          value: '20'
+          description: 'The warning threshold of the minimum free swap.'
+        -
+          macro: '{$SYSTEM.FUZZYTIME.MAX}'
+          value: '60'
+          description: 'The threshold for difference of system time in seconds.'
+        -
+          macro: '{$VFS.DEV.DEVNAME.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in physical disks discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$VFS.DEV.DEVNAME.NOT_MATCHES}'
+          value: _Total
+          description: 'This macro is used in physical disks discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$VFS.DEV.READ.AWAIT.WARN}'
+          value: '0.5'
+          description: 'Disk read average response time (in s) before the trigger would fire.'
+        -
+          macro: '{$VFS.DEV.UTIL.MAX.WARN}'
+          value: '95'
+          description: 'The warning threshold of disk time utilization in percent.'
+        -
+          macro: '{$VFS.DEV.WRITE.AWAIT.WARN}'
+          value: '0.02'
+          description: 'Disk write average response time (in s) before the trigger would fire.'
+        -
+          macro: '{$VFS.FS.FREE.MIN.CRIT}'
+          value: 5G
+          description: 'The critical threshold of the filesystem utilization.'
+        -
+          macro: '{$VFS.FS.FREE.MIN.WARN}'
+          value: 10G
+          description: 'The warning threshold of the filesystem utilization.'
+        -
+          macro: '{$VFS.FS.FSDRIVETYPE.MATCHES}'
+          value: fixed
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$VFS.FS.FSDRIVETYPE.NOT_MATCHES}'
+          value: ^\s$
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$VFS.FS.FSNAME.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$VFS.FS.FSNAME.NOT_MATCHES}'
+          value: '^(?:/dev|/sys|/run|/proc|.+/shm$)'
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$VFS.FS.FSTYPE.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$VFS.FS.FSTYPE.NOT_MATCHES}'
+          value: ^\s$
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        -
+          macro: '{$VFS.FS.PUSED.MAX.CRIT}'
+          value: '90'
+          description: 'The critical threshold of the filesystem utilization in percent.'
+        -
+          macro: '{$VFS.FS.PUSED.MAX.WARN}'
+          value: '80'
+          description: 'The warning threshold of the filesystem utilization in percent.'
+      dashboards:
+        -
+          uuid: 088183fdbde249ec897e2bd071354860
+          name: 'Gaming PC Performance'
+          pages:
+            -
+              widgets:
+                -
+                  type: GRAPH_CLASSIC
+                  width: '12'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Gameing  PC  with NVIDIA GPU'
+                        name: 'CPU & GPU usage'
+                -
+                  type: GRAPH_CLASSIC
+                  'y': '5'
+                  width: '12'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Gameing  PC  with NVIDIA GPU'
+                        name: 'Memory utilization'
+                -
+                  type: GRAPH_CLASSIC
+                  'y': '10'
+                  width: '12'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Gameing  PC  with NVIDIA GPU'
+                        name: 'Swap usage'
+                -
+                  type: GRAPH_PROTOTYPE
+                  x: '12'
+                  width: '12'
+                  height: '5'
+                  fields:
+                    -
+                      type: INTEGER
+                      name: columns
+                      value: '1'
+                    -
+                      type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Gameing  PC  with NVIDIA GPU'
+                        name: 'Interface {#IFNAME}({#IFALIAS}): Network traffic'
+                -
+                  type: GRAPH_PROTOTYPE
+                  name: 'Disk avg waiting time'
+                  'y': '20'
+                  width: '24'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Gameing  PC  with NVIDIA GPU'
+                        name: '{#DEVNAME}: Disk average waiting time'
+                -
+                  type: GRAPH_PROTOTYPE
+                  name: 'Disk read /write iops'
+                  'y': '15'
+                  width: '24'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Gameing  PC  with NVIDIA GPU'
+                        name: '{#DEVNAME}: Disk read/write rates'
+                -
+                  type: GRAPH_CLASSIC
+                  name: 'GPU Power'
+                  x: '12'
+                  'y': '10'
+                  width: '12'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Gameing  PC  with NVIDIA GPU'
+                        name: 'GPU Power&Temp'
+                -
+                  type: GRAPH_CLASSIC
+                  name: VRAM
+                  x: '12'
+                  'y': '5'
+                  width: '12'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Gameing  PC  with NVIDIA GPU'
+                        name: VRAM
+      valuemaps:
+        -
+          uuid: 8ae9494c05914aeebc120b3f4828e2ed
+          name: 'Win32_NetworkAdapter::AdapterTypeId'
+          mappings:
+            -
+              value: '0'
+              newvalue: 'Ethernet 802.3'
+            -
+              value: '1'
+              newvalue: 'Token Ring 802.5'
+            -
+              value: '2'
+              newvalue: 'Fiber Distributed Data Interface (FDDI)'
+            -
+              value: '3'
+              newvalue: 'Wide Area Network (WAN)'
+            -
+              value: '4'
+              newvalue: LocalTalk
+            -
+              value: '5'
+              newvalue: 'Ethernet using DIX header format'
+            -
+              value: '6'
+              newvalue: ARCNET
+            -
+              value: '7'
+              newvalue: 'ARCNET (878.2)'
+            -
+              value: '8'
+              newvalue: ATM
+            -
+              value: '9'
+              newvalue: Wireless
+            -
+              value: '10'
+              newvalue: 'Infrared Wireless'
+            -
+              value: '11'
+              newvalue: Bpc
+            -
+              value: '12'
+              newvalue: CoWan
+            -
+              value: '13'
+              newvalue: '1394'
+        -
+          uuid: 593ef7d799f64ce79fd6694332d1c27a
+          name: 'Win32_NetworkAdapter::NetConnectionStatus'
+          mappings:
+            -
+              value: '0'
+              newvalue: Disconnected
+            -
+              value: '1'
+              newvalue: Connecting
+            -
+              value: '2'
+              newvalue: Connected
+            -
+              value: '3'
+              newvalue: Disconnecting
+            -
+              value: '4'
+              newvalue: 'Hardware Not Present'
+            -
+              value: '5'
+              newvalue: 'Hardware Disabled'
+            -
+              value: '6'
+              newvalue: 'Hardware Malfunction'
+            -
+              value: '7'
+              newvalue: 'Media Disconnected'
+            -
+              value: '8'
+              newvalue: Authenticating
+            -
+              value: '9'
+              newvalue: 'Authentication Succeeded'
+            -
+              value: '10'
+              newvalue: 'Authentication Failed'
+            -
+              value: '11'
+              newvalue: 'Invalid Address'
+            -
+              value: '12'
+              newvalue: 'Credentials Required'
+        -
+          uuid: 7475b6f0c4ae488aa8e43fc3094627f4
+          name: 'Windows service state'
+          mappings:
+            -
+              value: '0'
+              newvalue: Running
+            -
+              value: '1'
+              newvalue: Paused
+            -
+              value: '2'
+              newvalue: 'Start pending'
+            -
+              value: '3'
+              newvalue: 'Pause pending'
+            -
+              value: '4'
+              newvalue: 'Continue pending'
+            -
+              value: '5'
+              newvalue: 'Stop pending'
+            -
+              value: '6'
+              newvalue: Stopped
+            -
+              value: '7'
+              newvalue: Unknown
+            -
+              value: '255'
+              newvalue: 'No such service'
+        -
+          uuid: 62378e4758924714a3f63ae94e09be8b
+          name: zabbix.host.available
+          mappings:
+            -
+              value: '0'
+              newvalue: 'not available'
+            -
+              value: '1'
+              newvalue: available
+            -
+              value: '2'
+              newvalue: unknown
+        -
+          uuid: ca5f9b27a69c4c00b65bf869749afc4b
+          name: 'Zabbix agent ping status'
+          mappings:
+            -
+              value: '1'
+              newvalue: Up
+  triggers:
+    -
+      uuid: 7d67cf6b67c04a9db9f91efee7ce614d
+      expression: 'min(/Gameing  PC  with NVIDIA GPU/system.swap.pfree,5m)<{$SWAP.PFREE.MIN.WARN} and last(/Gameing  PC  with NVIDIA GPU/system.swap.size[,total])>0'
+      name: 'High swap space usage'
+      event_name: 'High swap space usage (less than {$SWAP.PFREE.MIN.WARN}% free)'
+      opdata: 'Free: {ITEM.LASTVALUE1}, total: {ITEM.LASTVALUE2}'
+      priority: WARNING
+      description: 'This trigger is ignored, if there is no swap configured'
+      dependencies:
+        -
+          name: 'High memory utilization'
+          expression: 'min(/Gameing  PC  with NVIDIA GPU/vm.memory.util,5m)>{$MEMORY.UTIL.MAX}'
+      tags:
+        -
+          tag: scope
+          value: performance
+  graphs:
+    -
+      uuid: 85b5e62ee22541788a0e230dbfe689c8
+      name: 'CPU & GPU usage'
+      ymin_type_1: FIXED
+      ymax_type_1: FIXED
+      graph_items:
+        -
+          color: 0080FF
+          item:
+            host: 'Gameing  PC  with NVIDIA GPU'
+            key: system.cpu.util
+        -
+          sortorder: '1'
+          color: FF8000
+          calc_fnc: ALL
+          item:
+            host: 'Gameing  PC  with NVIDIA GPU'
+            key: gpu.utilisation
+    -
+      uuid: f16694782f8d4c0facde35cc39ba7bcb
+      name: 'GPU Power&Temp'
+      graph_items:
+        -
+          color: 0080FF
+          item:
+            host: 'Gameing  PC  with NVIDIA GPU'
+            key: gpu.power
+        -
+          sortorder: '1'
+          color: FFBF00
+          yaxisside: RIGHT
+          item:
+            host: 'Gameing  PC  with NVIDIA GPU'
+            key: gpu.temp
+    -
+      uuid: 62c5def608f54c85ace5c95b0935d4a7
+      name: 'Memory utilization'
+      ymin_type_1: FIXED
+      ymax_type_1: ITEM
+      ymax_item_1:
+        host: 'Gameing  PC  with NVIDIA GPU'
+        key: 'vm.memory.size[total]'
+      graph_items:
+        -
+          color: F63100
+          item:
+            host: 'Gameing  PC  with NVIDIA GPU'
+            key: 'vm.memory.size[used]'
+    -
+      uuid: 6291dc07c29d4d97a1c6e0d16dfee559
+      name: 'Swap usage'
+      ymax_type_1: ITEM
+      ymax_item_1:
+        host: 'Gameing  PC  with NVIDIA GPU'
+        key: 'system.swap.size[,total]'
+      graph_items:
+        -
+          color: 00BFFF
+          item:
+            host: 'Gameing  PC  with NVIDIA GPU'
+            key: system.swap.free
+    -
+      uuid: ec610dae645949f9bd5755e9c776be28
+      name: VRAM
+      ymax_type_1: ITEM
+      ymax_item_1:
+        host: 'Gameing  PC  with NVIDIA GPU'
+        key: gpu.memtotal
+      graph_items:
+        -
+          color: F63100
+          calc_fnc: ALL
+          item:
+            host: 'Gameing  PC  with NVIDIA GPU'
+            key: gpu.used
