@@ -1,5 +1,3 @@
-# ZabbixTemplateForGamingPC
-Welcome to the ZabbixTemplateForGamingPC wiki!
 # Summary
 
 This is a Zabbix template designed for use on gaming PCs.
